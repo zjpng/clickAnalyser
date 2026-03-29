@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QIAGEN Phygital NFC Campaign</title>
+<style>
+  :root {
+    --bg: #fafaf8;
+    --surface: #ffffff;
+    --surface2: #f4f3f0;
+    --border: #e2e0db;
+    --ink: #18181b;
+    --ink2: #3f3f46;
+    --muted: #71717a;
+    --accent: #5b21b6;
+    --accent-soft: rgba(91,33,182,0.08);
+    --accent-border: rgba(91,33,182,0.2);
+    --green: #065f46;
+    --green-bg: #d1fae5;
+    --gold: #92400e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── Progress Bar ── */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--accent);
+    transition: width 0.4s ease;
+    z-index: 100;
+  }
+
+  /* ── Header ── */
+  #header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    z-index: 50;
+    background: rgba(250,250,248,0.96);
+    border-bottom: 1px solid var(--border);
+  }
+
+  #header img { height: 40px; object-fit: contain; }
+  #header .slide-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Slide Container ── */
+  #slides {
+    position: relative;
+    width: 100%; height: 100vh;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 60px 80px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.38s ease, transform 0.38s ease;
+    transform: translateX(0);
+  }
+
+  .slide.from-right { transform: translateX(56px); }
+  .slide.from-left  { transform: translateX(-56px); }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateX(0);
+  }
+
+  .slide.exit-left  { opacity: 0; transform: translateX(-56px); }
+  .slide.exit-right { opacity: 0; transform: translateX(56px); }
+
+  .slide-tag {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+
+  h1 {
+    font-size: clamp(26px, 3.5vw, 46px);
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+    margin-bottom: 10px;
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    letter-spacing: -0.02em;
+  }
+
+  h2 {
+    font-size: clamp(18px, 2.2vw, 32px);
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    letter-spacing: -0.02em;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 32px;
+    max-width: 520px;
+    line-height: 1.6;
+  }
+
+  /* ── Navigation Arrows ── */
+  .nav-btn {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px; height: 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    z-index: 50;
+    transition: background 0.15s, border-color 0.15s, opacity 0.2s;
+    color: var(--ink2);
+    font-size: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .nav-btn:hover { background: var(--surface2); border-color: #c4c0b8; }
+  .nav-btn:active { transform: translateY(-50%) scale(0.97); }
+  #prev-btn { left: 16px; }
+  #next-btn { right: 16px; }
+  .nav-btn.hidden { opacity: 0; pointer-events: none; }
+
+  /* ── Dot Navigation ── */
+  #dots {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 50;
+  }
+
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #d4d0c8;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .dot.active {
+    background: var(--accent);
+    width: 20px;
+    border-radius: 3px;
+  }
+
+  /* ═══════════════════════════════
+     SLIDE 1 — THE CONCEPT
+  ═══════════════════════════════ */
+  .concept-toggle {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .toggle-btn {
+    padding: 7px 18px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .toggle-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .concept-content {
+    display: none;
+    max-width: 680px;
+    text-align: center;
+    animation: fadeUp 0.35s ease;
+  }
+  .concept-content.visible { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .nfc-visual {
+    position: relative;
+    width: 180px; height: 180px;
+    margin: 0 auto 28px;
+  }
+
+  .lung-svg { width: 100%; height: 100%; }
+
+  .nfc-rings {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .ring {
+    position: absolute;
+    border: 1.5px solid var(--accent);
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    animation: ringPulse 2.4s ease-out infinite;
+  }
+  .ring:nth-child(1) { width: 60px; height: 60px; animation-delay: 0s; }
+  .ring:nth-child(2) { width: 100px; height: 100px; animation-delay: 0.4s; }
+  .ring:nth-child(3) { width: 140px; height: 140px; animation-delay: 0.8s; }
+
+  @keyframes ringPulse {
+    0%   { opacity: 0.8; transform: translate(-50%, -50%) scale(0.4); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.2); }
+  }
+
+  .concept-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  }
+
+  .concept-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+  }
+
+  .concept-box p {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--ink2);
+  }
+
+  .concept-box .pill {
+    display: inline-block;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
+    color: var(--accent);
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ═══════════════════════════════
+     SLIDE 2 — USER FLOW
+  ═══════════════════════════════ */
+  .flow-steps {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    width: 100%;
+    max-width: 900px;
+    position: relative;
+  }
+
+  .flow-step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 20px 12px;
+    border-radius: 8px;
+    transition: all 0.25s;
+    position: relative;
+    border: 1px solid transparent;
+  }
+
+  .flow-step:hover { background: var(--surface2); }
+
+  .flow-step.done {
+    border-color: #a7f3d0;
+    background: #f0fdf4;
+  }
+
+  .flow-step.current {
+    border-color: var(--accent-border);
+    background: var(--accent-soft);
+  }
+
+  .flow-connector {
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .connector-line {
+    height: 2px;
+    width: 100%;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .connector-line .fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    width: 0;
+    background: var(--accent);
+    transition: width 0.6s 0.2s ease;
+  }
+
+  .connector-line.active .fill { width: 100%; }
+
+  .step-icon {
+    width: 60px; height: 60px;
+    border-radius: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    transition: all 0.25s;
+    position: relative;
+  }
+
+  .flow-step.done .step-icon {
+    border-color: #6ee7b7;
+    background: #ecfdf5;
+  }
+
+  .flow-step.current .step-icon {
+    border-color: var(--accent-border);
+    background: var(--accent-soft);
+  }
+
+  .step-num {
+    position: absolute;
+    top: -6px; right: -6px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    font-size: 9px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    border: 2px solid var(--bg);
+  }
+
+  .flow-step.done .step-num { background: #059669; }
+
+  .step-label {
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--muted);
+    transition: color 0.3s;
+    line-height: 1.3;
+  }
+
+  .flow-step.current .step-label,
+  .flow-step.done .step-label { color: var(--ink); }
+
+  .step-desc {
+    font-size: 12px;
+    text-align: center;
+    color: var(--muted);
+    line-height: 1.5;
+    max-width: 140px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .flow-step.current .step-desc,
+  .flow-step.done .step-desc {
+    opacity: 1;
+    height: auto;
+  }
+
+  .flow-cta {
+    margin-top: 28px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .btn {
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-ghost {
+    background: var(--surface);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--ink); border-color: #b8b4ac; }
+
+  /* ═══════════════════════════════
+     SLIDE 3 — DESTINATIONS
+  ═══════════════════════════════ */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 960px;
+  }
+
+  .flip-card {
+    height: 200px;
+    perspective: 1000px;
+    cursor: pointer;
+  }
+
+  .flip-inner {
+    position: relative;
+    width: 100%; height: 100%;
+    transition: transform 0.6s cubic-bezier(.4,0,.2,1);
+    transform-style: preserve-3d;
+  }
+
+  .flip-card.flipped .flip-inner { transform: rotateY(180deg); }
+
+  .flip-front, .flip-back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .flip-front {
+    background: var(--surface);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .flip-back {
+    background: var(--ink);
+    transform: rotateY(180deg);
+    border-color: var(--ink);
+    justify-content: center;
+  }
+
+  .flip-front:hover { border-color: #b8b4ac; background: var(--surface2); }
+
+  .card-icon { font-size: 36px; }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .card-hint {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .card-body {
+    font-size: 12px;
+    color: #c8c4be;
+    line-height: 1.65;
+  }
+
+  .card-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ═══════════════════════════════
+     SLIDE 4 — ANALYTICS
+  ═══════════════════════════════ */
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 820px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+
+  .stat-card:hover {
+    border-color: #b8b4ac;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  }
+
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .stat-card:hover::after { transform: scaleX(1); }
+
+  .stat-icon { font-size: 22px; margin-bottom: 8px; }
+
+  .stat-number {
+    font-size: 32px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    font-family: Georgia, serif;
+    letter-spacing: -0.02em;
+  }
+
+  .stat-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 4px;
+  }
+
+  .stat-detail {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.5;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+  }
+
+  .stat-card:hover .stat-detail { max-height: 80px; }
+
+  /* Pricing cards */
+  .pkg-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+
+  .pkg-card.pkg-featured {
+    border-color: var(--accent);
+    box-shadow: 0 4px 20px rgba(91,33,182,0.1);
+  }
+
+  .pkg-badge-start {
+    position: absolute;
+    top: 0; right: 16px;
+    transform: translateY(-50%);
+    background: var(--ink);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+
+  .pkg-badge-featured {
+    position: absolute;
+    top: 0; right: 16px;
+    transform: translateY(-50%);
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+
+  .pkg-tier {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .pkg-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    font-family: Georgia, serif;
+    margin-top: -4px;
+  }
+
+  .pkg-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .pkg-price-big {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--ink);
+    font-family: Georgia, serif;
+    letter-spacing: -0.02em;
+  }
+
+  .pkg-price-unit {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .pkg-included {
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+    margin-top: -4px;
+  }
+
+  .pkg-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 2px 0;
+  }
+
+  .pkg-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+  }
+
+  .pkg-features li {
+    font-size: 12px;
+    color: var(--ink2);
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.4;
+  }
+
+  .pkg-features li::before {
+    content: '✓';
+    font-size: 10px;
+    font-weight: 700;
+    color: #059669;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* Slide link buttons */
+  .slide-link-btn {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--accent-border);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  .slide-link-btn:hover { background: rgba(91,33,182,0.14); }
+
+  /* Adoption phases */
+  .adopt-phase {
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  .adopt-phase:hover { border-color: #b8b4ac; }
+
+  .adopt-phase.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: 0 2px 12px rgba(91,33,182,0.1);
+  }
+
+  .adopt-num {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+
+  .adopt-phase.active .adopt-num { color: var(--accent); }
+
+  .adopt-icon { font-size: 22px; }
+
+  .adopt-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    font-family: Georgia, serif;
+  }
+
+  .adopt-time {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .adopt-body {
+    font-size: 12px;
+    color: var(--ink2);
+    line-height: 1.6;
+    flex: 1;
+  }
+
+  .adopt-result {
+    font-size: 11px;
+    color: var(--ink2);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px 8px;
+    margin-top: 4px;
+  }
+
+  .adopt-phase.active .adopt-result {
+    background: rgba(91,33,182,0.08);
+    border-color: var(--accent-border);
+  }
+
+  /* Retargeting platforms */
+  .retarget-platform {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+
+  .platform-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .platform-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .platform-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* World map dots */
+  .world-map {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    grid-column: span 2;
+    position: relative;
+    height: 130px;
+    overflow: hidden;
+  }
+
+  .map-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .map-dots {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .map-dot {
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    animation: dotAppear 0.4s ease forwards;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .map-dot:hover { transform: scale(1.8); }
+
+  .map-dot::after {
+    content: attr(data-city);
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .map-dot:hover::after { opacity: 1; }
+
+  @keyframes dotAppear {
+    from { opacity: 0; transform: scale(0); }
+    to   { opacity: 0.8; transform: scale(1); }
+  }
+
+  /* ═══════════════════════════════
+     SLIDE 5 — BUSINESS MODEL
+  ═══════════════════════════════ */
+  .phase-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 28px;
+  }
+
+  .phase-tab {
+    padding: 10px 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.25s;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+  }
+
+  .phase-tab.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .phase-content {
+    display: none;
+    width: 100%;
+    max-width: 680px;
+    animation: fadeUp 0.35s ease;
+  }
+  .phase-content.visible { display: block; }
+
+  .phase-header {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 16px;
+  }
+
+  .line-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    opacity: 0;
+    transform: translateX(-12px);
+    transition: all 0.4s ease;
+    cursor: default;
+  }
+
+  .line-item.revealed {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .line-item:hover { border-color: var(--accent); }
+
+  .line-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+    box-shadow: 0 0 8px var(--accent-soft);
+  }
+
+  .line-name { font-size: 14px; font-weight: 600; flex: 1; }
+  .line-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .line-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
+    color: var(--accent);
+  }
+
+  /* ═══════════════════════════════
+     SLIDE 6 — NEXT STEPS
+  ═══════════════════════════════ */
+  .checklist {
+    width: 100%;
+    max-width: 620px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+
+  .check-item:hover { border-color: #b8b4ac; background: var(--surface2); }
+
+  .check-item.checked {
+    border-color: #a7f3d0;
+    background: #f0fdf4;
+  }
+
+  .checkbox {
+    width: 24px; height: 24px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s;
+    font-size: 13px;
+  }
+
+  .check-item.checked .checkbox {
+    background: var(--green);
+    border-color: var(--green);
+    box-shadow: none;
+  }
+
+  .check-text { font-size: 14px; font-weight: 500; flex: 1; }
+  .check-item.checked .check-text {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+
+  .check-step {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  .launch-cta {
+    margin-top: 24px;
+    padding: 16px 40px;
+    border-radius: 14px;
+    background: var(--accent);
+    border: none;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 12px rgba(91,33,182,0.25);
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+  }
+
+  .launch-cta.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+
+  .launch-cta:hover { opacity: 0.92; transform: translateY(-1px); }
+
+  /* no particles — removed */
+
+  /* ── Keyboard hint ── */
+  #kb-hint {
+    position: fixed;
+    bottom: 52px;
+    right: 20px;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.6;
+  }
+
+  .kb {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div id="progress-bar"></div>
+
+<!-- Header -->
+<div id="header">
+  <img src="assets/logo.png" alt="QIAGEN" onerror="this.style.display='none'; document.getElementById('logo-text').style.display='block'">
+  <span id="logo-text" style="display:none; font-size:18px; font-weight:800; background:linear-gradient(135deg,#1a1233,#7c3aed); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">QIAGEN</span>
+  <span class="slide-label" id="slide-label">01 / 06</span>
+</div>
+
+<!-- Navigation -->
+<button class="nav-btn hidden" id="prev-btn" onclick="navigate(-1)">&#8592;</button>
+<button class="nav-btn" id="next-btn" onclick="navigate(1)">&#8594;</button>
+
+<!-- Dots -->
+<div id="dots"></div>
+
+<!-- Keyboard hint -->
+<div id="kb-hint">
+  <span class="kb">←</span> <span class="kb">→</span> navigate &nbsp;|&nbsp; <span class="kb">Space</span> advance
+</div>
+
+<!-- ═══════════ SLIDES ═══════════ -->
+<div id="slides">
+
+  <!-- ── Slide 1: The Concept ── -->
+  <div class="slide active" data-index="0">
+    <div class="slide-tag">Slide 01 — The Concept</div>
+    <h1>Bridging Physical &amp; Digital</h1>
+    <p class="subtitle">Turning passive conference swag into a trackable lead-generation machine</p>
+
+    <div class="concept-toggle">
+      <button class="toggle-btn active" onclick="showConcept('problem', this)">The Problem</button>
+      <button class="toggle-btn" onclick="showConcept('solution', this)">The Solution</button>
+      <button class="toggle-btn" onclick="showConcept('action', this)">The Action</button>
+    </div>
+
+    <div class="nfc-visual">
+      <!-- Lung SVG -->
+      <svg class="lung-svg" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="lg" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#a855f7" stop-opacity="0.6"/>
+            <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.2"/>
+          </radialGradient>
+        </defs>
+        <!-- Left lung -->
+        <path d="M90 60 C75 55, 50 60, 45 80 C40 100, 42 125, 55 135 C65 143, 80 140, 88 130 L90 90 Z"
+              fill="url(#lg)" stroke="#a855f7" stroke-width="1.5" stroke-linejoin="round"/>
+        <!-- Right lung -->
+        <path d="M90 60 C105 55, 130 60, 135 80 C140 100, 138 125, 125 135 C115 143, 100 140, 92 130 L90 90 Z"
+              fill="url(#lg)" stroke="#a855f7" stroke-width="1.5" stroke-linejoin="round"/>
+        <!-- Trachea -->
+        <path d="M90 35 L90 62" stroke="#c084fc" stroke-width="3" stroke-linecap="round"/>
+        <path d="M85 45 L95 45" stroke="#c084fc" stroke-width="2" stroke-linecap="round"/>
+        <path d="M84 52 L96 52" stroke="#c084fc" stroke-width="2" stroke-linecap="round"/>
+        <!-- NFC symbol in center -->
+        <text x="90" y="104" text-anchor="middle" font-size="18" fill="#c084fc" opacity="0.9">📶</text>
+      </svg>
+      <div class="nfc-rings">
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+      </div>
+    </div>
+
+    <div id="concept-problem" class="concept-content visible">
+      <div class="concept-box">
+        <span class="pill">❌ Current State</span>
+        <p>Handing out physical swag at medical conferences generates goodwill — but <strong>zero trackable ROI</strong>. You don't know who took them, where they went, or if it ever led to a sale.</p>
+      </div>
+    </div>
+
+    <div id="concept-solution" class="concept-content">
+      <div class="concept-box">
+        <span class="pill">✨ Phygital Solution</span>
+        <p>We embed a <strong>silent, battery-free NFC tag</strong> into the QIAGEN lung plushies — turning every giveaway into a connected digital asset that can be updated, tracked, and monetised remotely.</p>
+      </div>
+    </div>
+
+    <div id="concept-action" class="concept-content">
+      <div class="concept-box">
+        <span class="pill">📱 The Tap</span>
+        <p>When a doctor, researcher, or distributor taps their smartphone to the plushie, they are <strong>instantly transported</strong> to a curated, trackable QIAGEN digital experience — no app download required.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Slide 2: User Flow ── -->
+  <div class="slide" data-index="1">
+    <div class="slide-tag">Slide 02 — The User Flow</div>
+    <h2>The Tap Experience</h2>
+    <p class="subtitle" style="margin-bottom:32px;">Click each step to walk through the journey</p>
+
+    <div class="flow-steps">
+      <div class="flow-step" id="step-0" onclick="activateStep(0)">
+        <div class="step-icon"><span id="icon-0">🫁</span><div class="step-num">1</div></div>
+        <div class="step-label">Physical<br>Interaction</div>
+        <div class="step-desc">Doctor taps smartphone to the lung plushie at the QIAGEN booth or later in their hotel room.</div>
+      </div>
+
+      <div class="flow-connector"><div class="connector-line" id="conn-0"><div class="fill"></div></div></div>
+
+      <div class="flow-step" id="step-1" onclick="activateStep(1)">
+        <div class="step-icon"><span id="icon-1">📱</span><div class="step-num">2</div></div>
+        <div class="step-label">Instant<br>Recognition</div>
+        <div class="step-desc">Smartphone reads the NFC tag and instantly opens the default web browser. No app download required.</div>
+      </div>
+
+      <div class="flow-connector"><div class="connector-line" id="conn-1"><div class="fill"></div></div></div>
+
+      <div class="flow-step" id="step-2" onclick="activateStep(2)">
+        <div class="step-icon"><span id="icon-2">🌐</span><div class="step-num">3</div></div>
+        <div class="step-label">Digital<br>Destination</div>
+        <div class="step-desc">Landing on a frictionless, mobile-optimised QIAGEN-branded experience. Link can be changed remotely at any time.</div>
+      </div>
+
+      <div class="flow-connector"><div class="connector-line" id="conn-2"><div class="fill"></div></div></div>
+
+      <div class="flow-step" id="step-3" onclick="activateStep(3)">
+        <div class="step-icon"><span id="icon-3">🎯</span><div class="step-num">4</div></div>
+        <div class="step-label">Value<br>Exchange</div>
+        <div class="step-desc">Presented with a highly relevant offer — exclusive clinical report, gamification prize, or specialist consultation.</div>
+      </div>
+    </div>
+
+    <div class="flow-cta">
+      <button class="btn btn-primary" onclick="autoPlayFlow()">▶ Auto Play</button>
+      <button class="btn btn-ghost" onclick="resetFlow()">↺ Reset</button>
+    </div>
+  </div>
+
+  <!-- ── Slide 3: Digital Destinations ── -->
+  <div class="slide" data-index="2">
+    <div class="slide-tag">Slide 03 — Digital Destinations</div>
+    <h2>What Happens After the Tap?</h2>
+    <p class="subtitle" style="margin-bottom:28px;">Click any card to reveal the experience — the destination can be changed remotely at any time</p>
+
+    <div class="cards-grid">
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-icon">📋</div>
+            <div class="card-title">Lead Capture</div>
+            <div class="card-hint">Tap to reveal →</div>
+          </div>
+          <div class="flip-back">
+            <span class="card-tag" style="background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25);color:#e2e0db;">Lead Gen</span>
+            <div class="card-body"><em>"Enter your work email to receive our exclusive 2026 Clinical Report on TB Diagnostics."</em><br><br>Captures: Name, Email, Job Title</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-icon">🎰</div>
+            <div class="card-title">Gamification</div>
+            <div class="card-hint">Tap to reveal →</div>
+          </div>
+          <div class="flip-back">
+            <span class="card-tag" style="background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25);color:#e2e0db;">Engagement</span>
+            <div class="card-body"><em>"Tap the lung to spin the wheel! Win an iPad Pro or exclusive QIAGEN lab gear."</em><br><br>Massive engagement driver at conferences</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-icon">🎬</div>
+            <div class="card-title">Rich Media</div>
+            <div class="card-hint">Tap to reveal →</div>
+          </div>
+          <div class="flip-back">
+            <span class="card-tag" style="background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25);color:#e2e0db;">Video</span>
+            <div class="card-body">60-second product video demonstrating QuantiFERON technology, followed by a "Talk to Sales" button.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="card-icon">📅</div>
+            <div class="card-title">Direct Booking</div>
+            <div class="card-hint">Tap to reveal →</div>
+          </div>
+          <div class="flip-back">
+            <span class="card-tag" style="background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.3);color:#fff;">High Intent</span>
+            <div class="card-body">Calendly-style booking to instantly reserve a 15-minute consultation with a QIAGEN respiratory specialist.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Slide 4: Analytics ── -->
+  <div class="slide" data-index="3">
+    <div class="slide-tag">Slide 04 — Real-Time Analytics</div>
+    <h2>Proving the ROI</h2>
+    <p class="subtitle" style="margin-bottom:24px;">We track every interaction — hover each card for more detail</p>
+
+    <div class="analytics-grid">
+      <div class="stat-card">
+        <div class="stat-icon">⏱</div>
+        <div class="stat-number" data-target="2847" data-suffix="">0</div>
+        <div class="stat-label">Tap Volume &amp; Timing</div>
+        <div class="stat-detail">See exactly when plushies are engaged with — massive spikes during lunch breaks vs. consistent taps three weeks after the conference.</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🌍</div>
+        <div class="stat-number" data-target="23" data-suffix=" countries">0</div>
+        <div class="stat-label">Geographic Tracking</div>
+        <div class="stat-detail">Map where taps occur globally. Did the plushies travel to hospitals in Germany, Japan, or the US? Real-time heatmap.</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">📱</div>
+        <div class="stat-number" data-target="68" data-suffix="% iOS">0</div>
+        <div class="stat-label">Device Intelligence</div>
+        <div class="stat-detail">Identify if the audience leans toward iOS or Android — essential for future app development and UX decisions.</div>
+      </div>
+
+      <div class="stat-card" style="grid-column: span 2;">
+        <div style="display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:180px;">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-number" data-target="30" data-suffix="-day window">0</div>
+            <div class="stat-label">Retargeting Profiles</div>
+            <div class="stat-detail" style="max-height:none; opacity:1;">Even if they don't fill the form, a tracking pixel fires the moment someone taps. Build anonymous retargeting audiences across all major ad platforms — no form submission required.</div>
+          </div>
+          <div style="flex:2; min-width:280px; display:flex; flex-direction:column; gap:8px; padding-top:4px;">
+            <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:4px;">Pixel integrations included</div>
+            <div class="retarget-platform">
+              <span class="platform-dot" style="background:#0077b5;"></span>
+              <div>
+                <div class="platform-name">LinkedIn Insight Tag</div>
+                <div class="platform-desc">Target by job title, seniority &amp; company — ideal for reaching lab directors &amp; procurement leads in medical networks</div>
+              </div>
+            </div>
+            <div class="retarget-platform">
+              <span class="platform-dot" style="background:#1877f2;"></span>
+              <div>
+                <div class="platform-name">Meta (Facebook &amp; Instagram)</div>
+                <div class="platform-desc">Lookalike audiences from tappers — scale reach to similar HCP profiles globally across Facebook &amp; Instagram feeds</div>
+              </div>
+            </div>
+            <div class="retarget-platform">
+              <span class="platform-dot" style="background:#ea4335;"></span>
+              <div>
+                <div class="platform-name">Google Ads Remarketing</div>
+                <div class="platform-desc">Follow tappers across Search, YouTube &amp; Display — serve QuantiFERON demos when they're actively researching diagnostics</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="world-map">
+        <div class="map-label">🗺 Live Tap Map — Hover dots for city detail</div>
+        <div class="map-dots" id="map-dots"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Slide 5: Adoption Strategy (moved before pricing to handle objection first) ── -->
+  <div class="slide" data-index="4">
+    <div class="slide-tag">Slide 05 — Why Not Just Link The Website</div>
+    <h2>The Low-Resistance Path</h2>
+    <p class="subtitle" style="margin-bottom:18px;">Meeting QIAGEN where they are — and walking them forward with data</p>
+
+    <div style="width:100%; max-width:860px; display:flex; flex-direction:column; gap:12px;">
+
+      <!-- The objection -->
+      <div style="display:flex; align-items:flex-start; gap:12px; padding:12px 18px; background:#fef9f0; border:1px solid #fcd34d; border-radius:8px;">
+        <span style="font-size:18px; flex-shrink:0;">💬</span>
+        <div>
+          <div style="font-size:12px; font-weight:700; color:#92400e; margin-bottom:3px;">"Let's just link to our website."</div>
+          <div style="font-size:12px; color:#78350f; line-height:1.6;">Understandable — but a homepage has a <strong>75–90% mobile bounce rate</strong>. The tap happens at peak curiosity. Landing on a generic homepage wastes that moment, captures zero leads, and fires zero pixels. The plushie becomes a novelty, not an asset.</div>
+        </div>
+      </div>
+
+      <!-- 3-phase plan -->
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
+
+        <div class="adopt-phase" id="adopt-0" onclick="activateAdopt(0)">
+          <div class="adopt-num">Phase 0</div>
+          <div class="adopt-icon">🔗</div>
+          <div class="adopt-title">The Trojan Horse</div>
+          <div class="adopt-time">Week 1–2 · Free to start</div>
+          <div class="adopt-body">We redirect through our system <em>to their existing website</em>. Zero change for QIAGEN. We silently layer on tap analytics, device tracking &amp; pixel fires. First real data — who's tapping, when, from where.</div>
+          <div class="adopt-result">Outcome: <strong>Proof of engagement</strong> — no creative needed</div>
+        </div>
+
+        <div class="adopt-phase" id="adopt-1" onclick="activateAdopt(1)">
+          <div class="adopt-num">Phase 1</div>
+          <div class="adopt-icon">📄</div>
+          <div class="adopt-title">One Page, One Offer</div>
+          <div class="adopt-time">Month 1 · $1,500 one-time</div>
+          <div class="adopt-body">A single QIAGEN-branded mobile page. One headline. One offer (e.g. "Download the 2026 TB Report"). One form. Includes form, video, game or web destination — plus 3 months basic CRM free. The bounce data from Phase 0 makes this an easy internal sell.</div>
+          <div class="adopt-result">Outcome: <strong>15–35% of tappers</strong> leave an email</div>
+        </div>
+
+        <div class="adopt-phase" id="adopt-2" onclick="activateAdopt(2)">
+          <div class="adopt-num">Phase 2</div>
+          <div class="adopt-icon">⚙️</div>
+          <div class="adopt-title">Full Pipeline</div>
+          <div class="adopt-time">Month 2+ · from $100/mo</div>
+          <div class="adopt-body">Full CRM analytics dashboard — click rates, open rates, geolocation, customer profiles. Add Salesforce / HubSpot integration + LinkedIn, Meta &amp; Google pixels for an additional $100/mo. Tap → CRM lead in under 60 seconds.</div>
+          <div class="adopt-result">Outcome: <strong>Every tap tracked</strong> to a specific CTA</div>
+        </div>
+
+      </div>
+
+      <!-- Conversion lift bar -->
+      <div style="display:flex; align-items:center; gap:0; border:1px solid var(--border); border-radius:8px; overflow:hidden; height:34px;">
+        <div style="flex:1; background:#fee2e2; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#991b1b;">Website only: ~5% convert</div>
+        <div style="width:2px; background:var(--border); height:100%;"></div>
+        <div style="flex:1.5; background:#fef9c3; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#78350f;">Phase 1 landing page: ~20% convert</div>
+        <div style="width:2px; background:var(--border); height:100%;"></div>
+        <div style="flex:2; background:#dcfce7; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#065f46;">Phase 2 + CRM + retargeting: ~35%+ lifetime</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Slide 6: Packages ── -->
+  <div class="slide" data-index="5">
+    <div class="slide-tag">Slide 06 — Packages</div>
+    <h2>Choose Your Starting Point</h2>
+    <p class="subtitle" style="margin-bottom:22px;">Start with Launch — upgrade when the data tells you to</p>
+
+    <div style="width:100%; max-width:860px; display:grid; grid-template-columns:repeat(3,1fr); gap:14px; align-items:stretch;">
+
+      <!-- Package 1: Launch -->
+      <div class="pkg-card">
+        <div class="pkg-badge-start">Start here</div>
+        <div class="pkg-tier">Package 1</div>
+        <div class="pkg-name">Launch</div>
+        <div class="pkg-price">
+          <span class="pkg-price-big">$1,500</span>
+          <span class="pkg-price-unit">one-time</span>
+        </div>
+        <div class="pkg-included">Includes 3 months basic CRM free</div>
+        <div class="pkg-divider"></div>
+        <ul class="pkg-features">
+          <li>Mobile landing page — design &amp; build</li>
+          <li>4 destination types: Form, Video, Game, Web</li>
+          <li>QIAGEN-branded, mobile-first layout</li>
+          <li>Basic tap analytics (volume, device, timing)</li>
+          <li>Dynamic link — update destination remotely</li>
+          <li>3 months basic CRM dashboard included</li>
+          <li>Delivered in 10 business days</li>
+        </ul>
+        <button class="slide-link-btn" style="margin-top:auto; padding:6px 12px;" onclick="goTo(2)">See what tappers land on →</button>
+      </div>
+
+      <!-- Package 2: Grow -->
+      <div class="pkg-card pkg-featured">
+        <div class="pkg-badge-featured">Most popular</div>
+        <div class="pkg-tier">Package 2</div>
+        <div class="pkg-name">Grow</div>
+        <div class="pkg-price">
+          <span class="pkg-price-big">$100</span>
+          <span class="pkg-price-unit">/month</span>
+        </div>
+        <div class="pkg-included">After 3 free months with Launch</div>
+        <div class="pkg-divider"></div>
+        <ul class="pkg-features">
+          <li>Everything in Launch</li>
+          <li>Full CRM analytics dashboard</li>
+          <li>Click-through &amp; open rates per CTA</li>
+          <li>Customer profiles from form submissions</li>
+          <li>Geolocation tracking — map where taps occur</li>
+          <li>Device intelligence (iOS vs Android split)</li>
+          <li>Engagement funnels &amp; CSV export</li>
+        </ul>
+        <button class="slide-link-btn" style="margin-top:auto; padding:6px 12px;" onclick="goTo(3)">See the analytics dashboard →</button>
+      </div>
+
+      <!-- Package 3: Scale -->
+      <div class="pkg-card">
+        <div class="pkg-tier">Package 3</div>
+        <div class="pkg-name">Scale</div>
+        <div class="pkg-price">
+          <span class="pkg-price-big">$200</span>
+          <span class="pkg-price-unit">/month</span>
+        </div>
+        <div class="pkg-included">$100 Grow + $100 integrations add-on</div>
+        <div class="pkg-divider"></div>
+        <ul class="pkg-features">
+          <li>Everything in Grow</li>
+          <li>Salesforce / HubSpot integration</li>
+          <li>Leads pushed automatically to your pipeline</li>
+          <li>LinkedIn Insight Tag pixel</li>
+          <li>Meta (Facebook &amp; Instagram) pixel</li>
+          <li>Google Ads remarketing pixel</li>
+          <li>30-day retargeting audience building</li>
+        </ul>
+        <button class="slide-link-btn" style="margin-top:auto; padding:6px 12px;" onclick="goTo(3)">See the retargeting analytics →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Slide 7: Summary ── -->
+  <div class="slide" data-index="6">
+    <div class="slide-tag">Slide 07 — Next Steps</div>
+    <h2>Three Steps to Go Live</h2>
+    <p class="subtitle" style="margin-bottom:24px;">Each step maps to a package — start at Launch, grow when the data proves it</p>
+
+    <div class="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox"></div>
+        <div style="flex:1">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
+            <div class="check-text" style="margin:0;">Approve landing page brief &amp; value exchange hook</div>
+            <span style="font-size:10px; font-weight:700; background:var(--accent-soft); border:1px solid var(--accent-border); color:var(--accent); padding:2px 7px; border-radius:4px; white-space:nowrap;">Launch — $1,500</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);">Decide the hook: report download, game, video, or form. Includes 3 months basic CRM. Delivered in 10 days.</div>
+        </div>
+        <div class="check-step">Step 01</div>
+      </div>
+
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox"></div>
+        <div style="flex:1">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
+            <div class="check-text" style="margin:0;">Activate CRM analytics — track every tap to a specific CTA</div>
+            <span style="font-size:10px; font-weight:700; background:var(--accent-soft); border:1px solid var(--accent-border); color:var(--accent); padding:2px 7px; border-radius:4px; white-space:nowrap;">Grow — $100/mo</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);">Click rates, open rates, geolocation, form data, device split — full funnel view of which conference, which plushie, which action.</div>
+        </div>
+        <div class="check-step">Step 02</div>
+      </div>
+
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="checkbox"></div>
+        <div style="flex:1">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
+            <div class="check-text" style="margin:0;">Connect Salesforce / HubSpot + activate retargeting pixels</div>
+            <span style="font-size:10px; font-weight:700; background:var(--accent-soft); border:1px solid var(--accent-border); color:var(--accent); padding:2px 7px; border-radius:4px; white-space:nowrap;">Scale — $200/mo</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);">Provide API credentials — leads flow into your pipeline automatically. LinkedIn, Meta &amp; Google pixels fire on every tap for 30-day retargeting.</div>
+        </div>
+        <div class="check-step">Step 03</div>
+      </div>
+    </div>
+
+    <button class="launch-cta" id="launch-cta" onclick="launchConfetti()">
+      🚀 Let's Build the Pipeline
+    </button>
+  </div>
+
+</div><!-- /slides -->
+
+<script>
+// ─── State ───────────────────────────────────────────────
+let current = 0;
+const TOTAL = 7;
+let flowStep = -1;
+let autoPlayTimer = null;
+let countersAnimated = false;
+let dotsRendered = false;
+let phaseRevealed = { 1: false, 2: false };
+
+// ─── Init ────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  buildDots();
+  updateUI();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); navigate(1); }
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); navigate(-1); }
+});
+
+// ─── Navigation ──────────────────────────────────────────
+function navigate(dir) {
+  const next = current + dir;
+  if (next < 0 || next >= TOTAL) return;
+  const slides = document.querySelectorAll('.slide');
+
+  // Exit current slide in the correct direction
+  const exitClass = dir > 0 ? 'exit-left' : 'exit-right';
+  slides[current].classList.remove('active');
+  slides[current].classList.add(exitClass);
+
+  // Position the incoming slide off-screen on the correct side, then activate it
+  const enterClass = dir > 0 ? 'from-right' : 'from-left';
+  slides[next].classList.add(enterClass);
+  // Force reflow so the starting position is painted before we transition
+  slides[next].getBoundingClientRect();
+  slides[next].classList.remove(enterClass);
+  slides[next].classList.add('active');
+
+  const prev = current;
+  current = next;
+
+  setTimeout(() => {
+    slides[prev].classList.remove(exitClass);
+  }, 400);
+
+  updateUI();
+  onSlideEnter(current);
+}
+
+function goTo(i) {
+  if (i === current) return;
+  const dir = i > current ? 1 : -1;
+  // Navigate step by step would be janky for big jumps — snap directly
+  const slides = document.querySelectorAll('.slide');
+  slides[current].classList.remove('active');
+  current = i;
+  slides[i].classList.add('active');
+  updateUI();
+  onSlideEnter(current);
+}
+
+function updateUI() {
+  // Progress bar
+  document.getElementById('progress-bar').style.width = ((current + 1) / TOTAL * 100) + '%';
+  // Label
+  document.getElementById('slide-label').textContent =
+    String(current + 1).padStart(2,'0') + ' / ' + String(TOTAL).padStart(2,'0');
+  // Prev/next buttons
+  document.getElementById('prev-btn').classList.toggle('hidden', current === 0);
+  document.getElementById('next-btn').classList.toggle('hidden', current === TOTAL - 1);
+  // Dots
+  document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i === current));
+}
+
+function buildDots() {
+  const c = document.getElementById('dots');
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    c.appendChild(d);
+  }
+}
+
+// ─── On slide enter hooks ─────────────────────────────────
+function onSlideEnter(idx) {
+  if (idx === 3 && !countersAnimated) { animateCounters(); countersAnimated = true; }
+  if (idx === 3 && !dotsRendered) { renderMapDots(); dotsRendered = true; }
+  if (idx === 4) activateAdopt(0); // adoption is now slide 5 (index 4)
+}
+
+// ─── Slide 1: Concept Toggle ─────────────────────────────
+function showConcept(id, btn) {
+  document.querySelectorAll('.concept-content').forEach(c => c.classList.remove('visible'));
+  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('concept-' + id).classList.add('visible');
+  btn.classList.add('active');
+}
+
+// ─── Slide 2: Flow Steps ─────────────────────────────────
+function activateStep(n) {
+  if (autoPlayTimer) { clearTimeout(autoPlayTimer); autoPlayTimer = null; }
+  flowStep = n;
+  renderFlow();
+}
+
+function renderFlow() {
+  for (let i = 0; i < 4; i++) {
+    const step = document.getElementById('step-' + i);
+    step.classList.remove('current','done');
+    if (i < flowStep) step.classList.add('done');
+    if (i === flowStep) step.classList.add('current');
+    if (i < 3) {
+      const conn = document.getElementById('conn-' + i);
+      conn.classList.toggle('active', i < flowStep);
+    }
+  }
+  // Check marks on done steps
+  [0,1,2,3].forEach(i => {
+    const icon = document.getElementById('icon-' + i);
+    if (i < flowStep) icon.textContent = '✅';
+    else icon.textContent = ['🫁','📱','🌐','🎯'][i];
+  });
+}
+
+function autoPlayFlow() {
+  flowStep = -1;
+  renderFlow();
+  function step(n) {
+    if (n > 3) return;
+    activateStep(n);
+    autoPlayTimer = setTimeout(() => step(n + 1), 900);
+  }
+  setTimeout(() => step(0), 200);
+}
+
+function resetFlow() {
+  if (autoPlayTimer) { clearTimeout(autoPlayTimer); autoPlayTimer = null; }
+  flowStep = -1;
+  renderFlow();
+}
+
+// ─── Slide 4: Counters ───────────────────────────────────
+function animateCounters() {
+  document.querySelectorAll('.stat-number').forEach(el => {
+    const target = parseInt(el.dataset.target);
+    const suffix = el.dataset.suffix || '';
+    const duration = 1600;
+    const start = Date.now();
+    function tick() {
+      const p = Math.min((Date.now() - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * ease) + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    tick();
+  });
+}
+
+// Map dots data
+const mapLocations = [
+  { city:'Berlin', x:'48%', y:'28%' }, { city:'London', x:'43%', y:'25%' },
+  { city:'Paris', x:'45%', y:'30%' }, { city:'Tokyo', x:'79%', y:'35%' },
+  { city:'New York', x:'24%', y:'32%' }, { city:'Chicago', x:'21%', y:'30%' },
+  { city:'Sydney', x:'80%', y:'68%' }, { city:'Singapore', x:'74%', y:'52%' },
+  { city:'Johannesburg', x:'52%', y:'63%' }, { city:'São Paulo', x:'31%', y:'60%' },
+  { city:'Mumbai', x:'64%', y:'44%' }, { city:'Toronto', x:'22%', y:'28%' },
+  { city:'Dubai', x:'60%', y:'40%' }, { city:'Seoul', x:'78%', y:'32%' },
+  { city:'Amsterdam', x:'47%', y:'26%' }, { city:'Los Angeles', x:'16%', y:'35%' },
+  { city:'Stockholm', x:'50%', y:'20%' }, { city:'Zurich', x:'48%', y:'29%' },
+  { city:'Boston', x:'25%', y:'30%' }, { city:'Barcelona', x:'45%', y:'34%' },
+  { city:'Vienna', x:'50%', y:'28%' }, { city:'Cape Town', x:'50%', y:'68%' },
+  { city:'Beijing', x:'76%', y:'32%' }
+];
+
+function renderMapDots() {
+  const container = document.getElementById('map-dots');
+  mapLocations.forEach((loc, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'map-dot';
+    dot.setAttribute('data-city', loc.city);
+    dot.style.left = loc.x;
+    dot.style.top = loc.y;
+    dot.style.animationDelay = (i * 80) + 'ms';
+    // Size varies by "intensity"
+    const size = 6 + Math.floor(Math.random() * 8);
+    dot.style.width = size + 'px';
+    dot.style.height = size + 'px';
+    dot.style.opacity = (0.4 + Math.random() * 0.5);
+    container.appendChild(dot);
+  });
+}
+
+// ─── Slide 5: Business Model ─────────────────────────────
+function showPhase(n, btn) {
+  document.querySelectorAll('.phase-content').forEach(p => p.classList.remove('visible'));
+  document.querySelectorAll('.phase-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('phase-' + n).classList.add('visible');
+  btn.classList.add('active');
+  revealPhaseItems(n);
+}
+
+function revealPhaseItems(n) {
+  if (phaseRevealed[n]) return;
+  phaseRevealed[n] = true;
+  const items = document.querySelectorAll('#phase-' + n + ' .line-item');
+  items.forEach((item, i) => {
+    setTimeout(() => item.classList.add('revealed'), i * 150 + 80);
+  });
+}
+
+// ─── Slide 6: Checklist ──────────────────────────────────
+function toggleCheck(item) {
+  item.classList.toggle('checked');
+  const cb = item.querySelector('.checkbox');
+  if (item.classList.contains('checked')) {
+    cb.textContent = '✓';
+  } else {
+    cb.textContent = '';
+  }
+  // Count checked
+  const total = document.querySelectorAll('.check-item').length;
+  const checked = document.querySelectorAll('.check-item.checked').length;
+  const cta = document.getElementById('launch-cta');
+  if (checked === total) {
+    cta.classList.add('visible');
+  } else {
+    cta.classList.remove('visible');
+  }
+}
+
+// ─── Slide 6: Adoption phases ─────────────────────────────
+function activateAdopt(n) {
+  [0,1,2].forEach(i => {
+    document.getElementById('adopt-' + i).classList.toggle('active', i === n);
+  });
+}
+
+function launchConfetti() {
+  // Simple confetti burst
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('div');
+    p.style.cssText = `
+      position: fixed;
+      width: ${4 + Math.random()*6}px;
+      height: ${4 + Math.random()*6}px;
+      background: ${['#7c3aed','#a855f7','#c084fc','#fbbf24','#34d399','#f87171'][Math.floor(Math.random()*6)]};
+      border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      left: ${20 + Math.random()*60}%;
+      top: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transition: all ${0.8 + Math.random()}s ease-out;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => {
+      p.style.top = (10 + Math.random() * 80) + '%';
+      p.style.left = (10 + Math.random() * 80) + '%';
+      p.style.opacity = '0';
+    }, 20);
+    setTimeout(() => p.remove(), 1500);
+  }
+}
+
+// ─── Particle Background ─────────────────────────────────
+</script>
+</body>
+</html>
